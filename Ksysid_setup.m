@@ -13,7 +13,7 @@ data4sysid = load( [datafile_path , datafile_name] );
 
 %% construct sysid class
 Ksysid = Ksysid( data4sysid ,...
-        'model_type' , 'bilinear' ,...    % model type (linear, bilinear, or nonlinear)
+        'model_type' , 'linear' ,...    % model type (linear, bilinear, or nonlinear)
         'time_type' , 'discrete' , ...  % 'discrete' or 'continuous'
         'obs_type' , { 'poly' } ,...    % type of basis functions
         'obs_degree' , [ 2 ] ,...       % "degree" of basis functions
@@ -29,13 +29,13 @@ else
    disp(['Number of basis functions: ' , num2str( Ksysid.params.N ) ]);
 end
     
-%% basis dimensional reduction
+%% basis dimensional reduction (no longer needed, baked into class constructor)
 
-disp('Performing dimensional reduction...');
-Px = Ksysid.lift_snapshots( Ksysid.snapshotPairs );
-Ksysid = Ksysid.get_econ_observables( Px );
-disp(['Number of basis functions: ' , num2str( Ksysid.params.N ) ]);
-clear Px;
+% disp('Performing dimensional reduction...');
+% Px = Ksysid.lift_snapshots( Ksysid.snapshotPairs );
+% Ksysid = Ksysid.get_econ_observables( Px );
+% disp(['Number of basis functions: ' , num2str( Ksysid.params.N ) ]);
+% clear Px;
     
 %% train model(s)
 Ksysid = Ksysid.train_models;

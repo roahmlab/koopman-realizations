@@ -1917,9 +1917,7 @@ classdef Ksysid
             
             if nargin < 3
                 saveask = true;    % ask if user wants to save the model
-                plot_on = true;    % plot model unless specified otherwise
-            elseif nargin < 4
-                plot_on = true;    % plot model unless specified otherwise
+                plot_on = true;    % plot model unless sp
             end
             
             % if no model id is provided, use first one in the model cell array
@@ -1944,9 +1942,7 @@ classdef Ksysid
                     results{i} = obj.val_model( mod , obj.valdata{i} );
                 end
                 err{i} = obj.get_error( results{i}.sim , results{i}.real );
-                if plot_on
-                    obj.plot_comparison( results{i}.sim , results{i}.real , ['Lasso: ' , num2str(mod.lasso)] );
-                end
+                obj.plot_comparison( results{i}.sim , results{i}.real , ['Lasso: ' , num2str(mod.lasso)] );
             end
             
             % save (or don't save) sysid class, model, and training data

@@ -11,9 +11,9 @@
 save_models = false;
 
 % Maximum degree for each type of model
-max_degree_linear = 6;
-max_degree_bilinear = 4;
-max_degree_nonlinear = 4;
+max_degree_linear = 20;     %13;     % 20
+max_degree_bilinear = 10;   %6;    % 10
+max_degree_nonlinear = 5;   %4;   % 5
 
 % load in data file(s)
 [ datafile_name , datafile_path ] = uigetfile( 'datafiles/*.mat' , 'Choose data file for sysid...' );
@@ -52,7 +52,7 @@ for i = 1 : size( data4sysid_all , 1 )
             'obs_type' , { 'poly' } ,...    % type of basis functions
             'obs_degree' , [ j ] ,...       % "degree" of basis functions
             'snapshots' , Inf ,...          % Number of snapshot pairs
-            'lasso' , [ Inf ] ,...            % L1 regularization term (Inf for least-squares sol.)
+            'lasso' , [ Inf ] ,...            % L1 regularization term (Inf for least-squares sol.)   1
             'delays' , 0 ,...               % Numer of state/input delays
             'loaded' , false ,...           % Does system include external loads?
             'dim_red' , false);             % Should dimensional reduction be performed?
@@ -66,7 +66,7 @@ for i = 1 : size( data4sysid_all , 1 )
         end
         
         % validate model
-        results = Ksysid.valNplot_model([],false);
+        results = Ksysid.valNplot_model([],false,false);
         mean_error = results{1}.error.mean;  % mean error over all time steps
         mean_error_zeros = sum( abs( results{1}.real.y ) ) / size(results{1}.real.y,1); % mean error over all time steps, zero response
         normed_mean_error = results{1}.error.mean / mean_error_zeros;   % mean error normed by zero response
@@ -85,7 +85,7 @@ for i = 1 : size( data4sysid_all , 1 )
             'obs_type' , { 'poly' } ,...    % type of basis functions
             'obs_degree' , [ j ] ,...       % "degree" of basis functions
             'snapshots' , Inf ,...          % Number of snapshot pairs
-            'lasso' , [ Inf ] ,...            % L1 regularization term (Inf for least-squares sol.)
+            'lasso' , [ Inf ] ,...            % L1 regularization term (Inf for least-squares sol.)     4-8
             'delays' , 0 ,...               % Numer of state/input delays
             'loaded' , false ,...           % Does system include external loads?
             'dim_red' , false);             % Should dimensional reduction be performed?
@@ -99,7 +99,7 @@ for i = 1 : size( data4sysid_all , 1 )
         end
         
         % validate model
-        results = Ksysid.valNplot_model([],false);
+        results = Ksysid.valNplot_model([],false,false);
         mean_error = results{1}.error.mean;  % mean error over all time steps
         mean_error_zeros = sum( abs( results{1}.real.y ) ) / size(results{1}.real.y,1); % mean error over all time steps, zero response
         normed_mean_error = results{1}.error.mean / mean_error_zeros;   % mean error normed by zero response
@@ -118,7 +118,7 @@ for i = 1 : size( data4sysid_all , 1 )
             'obs_type' , { 'poly' } ,...    % type of basis functions
             'obs_degree' , [ j ] ,...       % "degree" of basis functions
             'snapshots' , Inf ,...          % Number of snapshot pairs
-            'lasso' , [ Inf ] ,...            % L1 regularization term (Inf for least-squares sol.)
+            'lasso' , [ 4 ] ,...            % L1 regularization term (Inf for least-squares sol.)
             'delays' , 0 ,...               % Numer of state/input delays
             'loaded' , false ,...           % Does system include external loads?
             'dim_red' , false);             % Should dimensional reduction be performed?
@@ -132,7 +132,7 @@ for i = 1 : size( data4sysid_all , 1 )
         end
         
         % validate model
-        results = Ksysid.valNplot_model([],false);
+        results = Ksysid.valNplot_model([],false,false);
         mean_error = results{1}.error.mean;  % mean error over all time steps
         mean_error_zeros = sum( abs( results{1}.real.y ) ) / size(results{1}.real.y,1); % mean error over all time steps, zero response
         normed_mean_error = results{1}.error.mean / mean_error_zeros;   % mean error normed by zero response
@@ -145,30 +145,62 @@ end
 
 %% Plot the error
 
+% throw out any trials with NaNs
+err_linear_nonan = err_linear_models( : , all(~isnan(err_linear_models)) );
+err_bilinear_nonan = err_bilinear_models( : , all(~isnan(err_bilinear_models)) );
+err_nonlinear_nonan = err_nonlinear_models( : , all(~isnan(err_nonlinear_models)) );
+
+% % remove outliers
+err_linear_nonan = err_linear_models( : , all( err_linear_models < 10 ) );
+err_bilinear_nonan = err_bilinear_models( : , all( err_bilinear_models < 10 ) );
+err_nonlinear_nonan = err_nonlinear_models( : , all( err_nonlinear_models < 10 ) );
+% err_linear_nonan = rmoutliers(err_linear_nonan,2);
+% err_bilinear_nonan = rmoutliers( err_bilinear_nonan , 2 );
+% err_nonlinear_nonan = rmoutliers(err_nonlinear_nonan,2);
+
 % linear
-mean_linear = mean( err_linear_models , 2 );
-std_linear = std( err_linear_models' )';
+mean_linear = mean( err_linear_nonan , 2 );
+std_linear = std( err_linear_nonan' )';
 
 % bilinear
-mean_bilinear = mean( err_bilinear_models , 2 );
-std_bilinear = std( err_bilinear_models' )';
+mean_bilinear = mean( err_bilinear_nonan , 2 );
+std_bilinear = std( err_bilinear_nonan' )';
 
 % nonlinear
-mean_nonlinear = mean( err_nonlinear_models , 2 );
-std_nonlinear = std( err_nonlinear_models' )';
+mean_nonlinear = mean( err_nonlinear_nonan , 2 );
+std_nonlinear = std( err_nonlinear_nonan' )';
 
+% plot the comparison (need to edit figure to make it look nice
+std_scale = 1; % reduce scale of standard devation for better viewing
 figure;
 hold on;
-plot( dim_linear_models(:,1) , mean_linear , 'b' );
-plot( dim_bilinear_models(:,1) , mean_bilinear , 'g' );
-plot( dim_nonlinear_models(:,1) , mean_nonlinear , 'r' );
+errorbar( dim_linear_models(:,1) , mean_linear , std_scale * std_linear , 'b' );
+errorbar( dim_bilinear_models(:,1) , mean_bilinear , std_scale * std_bilinear , 'g' );
+errorbar( dim_nonlinear_models(:,1) , mean_nonlinear , std_scale * std_nonlinear , 'r' );
+% plot( dim_linear_models(:,1) , mean_linear , 'b' );
+% plot( dim_bilinear_models(:,1) , mean_bilinear , 'g' );
+% plot( dim_nonlinear_models(:,1) , mean_nonlinear , 'r' );
 hold off;
+xlabel('Numer of basis functions')
+ylabel('Normalized error')
+legend( 'linear' , 'bilinear' , 'nonlinear' )
+ylim([0,1]);
 
 
 
 
-
-
+% box and whisker plots
+figure;
+subplot(1,3,1)
+boxplot( err_linear_nonan' , dim_linear_models(:,1) , 'Colors' , [0 0 1] , 'PlotStyle','compact' );
+ylim([0,0.6]);
+xlim([0,2])
+subplot(1,3,2)
+boxplot( err_bilinear_nonan' , dim_bilinear_models(:,1) , 'Colors' , [0 1 0] , 'PlotStyle','compact' );
+ylim([0,0.6]);
+subplot(1,3,3)
+boxplot( err_nonlinear_nonan' , dim_nonlinear_models(:,1) , 'Colors' , [1 0 0] , 'PlotStyle','compact' );
+ylim([0,0.6]);
 
 
 

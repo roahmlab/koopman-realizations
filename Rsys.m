@@ -45,15 +45,23 @@ classdef Rsys
             for i = 1 : obj.degree_u + 1
                 u_monomial(1,i) = u_monomial(1,i) * u^(i-1);
             end
+            u_monomial(1,1) = 0;  % so that constant isn't outside [-1,1]
+            
+            % **** new way of doing it!! [x x x x] , [u u u]
+            x_monomial = kron( ones( 1 , obj.degree_x ) , x );
+            u_monomial = kron( ones( 1 , obj.degree_u ) , u );
             
             % define dictionary of functions 
-            funcs = [ x_monomial , sin(x) , cos(x) , u_monomial , sin(u) , cos(u) ];
+%             funcs = [ x_monomial , sin(x) , cos(x) , u_monomial , sin(u) , cos(u) ];
+%             funcs = [ x_monomial , 1 , 1 , u_monomial , 1 , 1 ];    % remove the sin and cos functions
+            funcs = [ x_monomial , u_monomial ];    % **** new way
             
             for i = 1 : obj.num_sys
                 % define random coefficients and combinations
                 coeffs = 1*( 2*rand(obj.num_terms,1) - 1 );
-                selectors = randi( [0,1] , obj.num_terms , obj.degree_x + obj.degree_u + 2 + 4 );
+%                 selectors = randi( [0,1] , obj.num_terms , obj.degree_x + obj.degree_u + 2 + 4 );
 %                 selectors = ones( obj.num_terms , obj.degree_x + obj.degree_u + 2 + 4 );    % use all terms
+                selectors = randi( [0,1] , obj.num_terms , obj.degree_x + obj.degree_u );   % **** new way
                 
                 % define terms
                 terms = sym( ones(1,obj.num_terms) );
@@ -62,7 +70,17 @@ classdef Rsys
                 end
                 
                 % dynamics are defined as sum of the terms times gaussian
-                xdot = sum( terms ) * exp(-x^2);
+%                 xdot = ( exp(-(x^4)/1) ) * ...
+%                        ( sum( terms ) + ...                          
+%                        10*(2*rand(1,obj.degree_u+1)-1) * u_monomial' ) + ...    % make sure there are isolated input terms
+%                        -atan(x)/1;     % make sure it doesn't blow up
+                % **** new way
+                xdot = ( exp(-(x^4)/1) ) * ...
+                       ( sum( terms ) + ...                          
+                       2*(2*rand()-1) * u ) + ...             % 1*(2*rand(1,obj.degree_u)-1) * u_monomial' ) + ...    % make sure there are isolated input terms
+                       -atan(x)/1;     % make sure it doesn't blow up
+                   
+%                    1 * (2*rand()-1) * u ) + ...    % make sure there are isolated input terms       % 
                 
                 % define output
                 obj.systems{i}.vf_sym = xdot;
@@ -92,8 +110,8 @@ classdef Rsys
            for i = 1 : obj.num_sys
                for j = 1 : num_trials
                    % generate random inputs between [-1,1]
-                   uq = 2 * rand( length(tq) , 1 ) - 1;
-%                    uq = obj.generate_input_steps( tq , 100 );
+%                    uq = 10 * ( 2 * rand( length(tq) , 1 ) - 1 );
+                   uq = 1 * obj.generate_input_steps( tq , 50 );
                    
                    % DO ODE45 IN HERE
                    [ t_out , y_out ] = ode45( @(t,x) obj.systems{i}.vf_func( t , x , obj.get_u(t,tq,uq) ) , tq , x0(j,:)' );
@@ -112,14 +130,15 @@ classdef Rsys
            u = uq(index,:);
         end
         
-        % generate_input_ramps
-        function U = generate_input_steps( obj , tq , num_steps_ramp )
-            % generate_input_ramps
+        % generate_input_steps
+        function U = generate_input_steps( obj , tq , num_steps )
+            % generate_input_steps
             %   Generate a sequence of inputs made up of steps, 
             %   rather than just comeletely random inputs. Should allow for
             %   more system exitation/movement I think
+            %       num_steps - number of time-steps for each step input
             
-            ind = 1 : num_steps_ramp : length( tq );
+            ind = 1 : num_steps : length( tq );
             inputs = 2 * rand( length(ind) , 1 ) - 1;
             
             U = zeros( size(tq) );  % only works for 1-D input

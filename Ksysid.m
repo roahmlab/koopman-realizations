@@ -514,6 +514,13 @@ classdef Ksysid
                 zeta = zeta(1 : obj.params.nzeta);
             end
             
+            % multiply by smooth bump function to bound magnitude TEST
+            % (DOESN't SEEM TO HELP WITH EXPLODING SIMULATIONS)
+            % (I THINK THIS SHOULD ONLY WORK FOR CTS MODELS)
+            % (DOESN'T WORK UNLESS RELIFTING AT EACH TIME STEP)
+%             fullBasis = fullBasis * exp(-( norm(zeta) )^2 / 1);
+%             fullBasis = fullBasis * exp(-( norm(zeta) )^10 / 100);
+            
             % define outputs
             obj.params.zeta = zeta;
             obj.basis.full = fullBasis;

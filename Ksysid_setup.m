@@ -3,6 +3,7 @@
 % Creates a sysid class and walks through all of the steps of building a
 % model from data, validating its performance, and saving it (if desired)
 
+clear Ksysid;
 
 %% gather training data (need to prepare data file before running this)
 
@@ -13,10 +14,10 @@ data4sysid = load( [datafile_path , datafile_name] );
 
 %% construct sysid class
 Ksysid = Ksysid( data4sysid ,...
-        'model_type' , 'linear' ,...    % model type (linear, bilinear, or nonlinear)
+        'model_type' , 'bilinear' ,...    % model type (linear, bilinear, or nonlinear)
         'time_type' , 'discrete' , ...  % 'discrete' or 'continuous'
         'obs_type' , { 'poly' } ,...    % type of basis functions
-        'obs_degree' , [ 2 ] ,...       % "degree" of basis functions
+        'obs_degree' , [ 10 ] ,...       % "degree" of basis functions
         'snapshots' , Inf ,...          % Number of snapshot pairs
         'lasso' , [ Inf ] ,...            % L1 regularization term (Inf for least-squares sol.)
         'delays' , 0 ,...               % Numer of state/input delays

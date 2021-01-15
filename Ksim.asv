@@ -185,7 +185,7 @@ classdef Ksim
                     if mod( k , obj.mpc.load_obs_period ) == 0
                         if strcmp( obj.mpc.model_type , 'linear' )
                             current.what = obj.mpc.estimate_load_linear( ypast , upast)';   % NOTE!!!!: Only works no delays for now
-                        elseif strcmp( obj.mpc.model_type , 'bilinear' ) && strcmp( obj.mpc.mpc_type , 'linear' )
+                        elseif strcmp( obj.mpc.model_type , 'bilinear' )
                             current.what = obj.mpc.estimate_load_bilinear( ypast , upast)';
                         end
                     else
@@ -205,12 +205,9 @@ classdef Ksim
                 tic
                 if strcmp( obj.mpc.model_type , 'linear' )
                     [ U , z ] = obj.mpc.get_mpcInput( current , refhor );
-                elseif strcmp( obj.mpc.model_type , 'bilinear' ) && strcmp( obj.mpc.mpc_type , 'linear' )
+                elseif strcmp( obj.mpc.model_type , 'bilinear' ) && 
 %                     [ U , z ] = obj.mpc.get_mpcInput_bilinear( current , refhor );
                     [ U , z ] = obj.mpc.get_mpcInput_bilinear_iter( current , refhor , 1 );
-                elseif strcmp( obj.mpc.model_type , 'bilinear' ) && strcmp( obj.mpc.mpc_type , 'nonlinear' )
-%                     [ U , z ] = obj.mpc.get_mpcInput_bilinear( current , refhor );
-                    [ U , z ] = obj.mpc.get_mpcInput_nonlinear( current , refhor );
                 elseif strcmp( obj.mpc.model_type , 'nonlinear' )
                     [ U , z ] = obj.mpc.get_mpcInput_nonlinear( current , refhor );
                 end

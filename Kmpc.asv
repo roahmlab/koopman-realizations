@@ -90,7 +90,7 @@ classdef Kmpc
                 obj = obj.get_constraintMatrices_bilinear;
             elseif strcmp( obj.model_type , 'bilinear' ) && strcmp( obj.mpc_type , 'nonlinear' )
                 % Define symbolic function for bilinear dynamics
-                obj.model.F_sym = obj.model.C * ( obj.model.A * obj.basis.econ_full + obj.model.Beta( obj.basis.econ_full ) * obj.params.u );
+                obj.model.F_sym = obj.model.A * obj.basis.econ_full + obj.model.Beta( obj.basis.econ_full ) * obj.params.u;
                 obj.model.F_func = matlabFunction( obj.model.F_sym , 'Vars' , { obj.params.zeta , obj.params.u } );
                 
                 obj = obj.get_costMatrices_nonlinear;
@@ -99,7 +99,7 @@ classdef Kmpc
                 obj = obj.get_costMatrices_nonlinear;
                 obj = obj.get_constraintMatrices_nonlinear;
             else
-                error([ obj.model_type , ' model is incompatible with mpc_type: ' , obj.mpc_type ]);
+                error(['model_type: ' , obj.model_type , ' is incompatible with ']);
             end
         end
         

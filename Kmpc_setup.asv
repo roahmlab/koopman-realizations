@@ -13,6 +13,6 @@ Kmpc = Kmpc( Ksysid ,...
         'cost_terminal' , 100 ,...  % 100
         'cost_input' , 0.1 * [ 3e-2 , 2e-2 , 1e-2 ]' ,...    % 1e-1
         'projmtx' , Ksysid.model.C(end-1:end,:) ); %,...  % just end effector
-%         'mpc_type' , 'nonlinear' ,...  % only need specify if you want to do nonlinear mpc with a bilinear model
+        'mpc_type' , 'linear' ,...      % only needed if 
 %         'load_obs_horizon' , 40 ,...   % only needed for loaded models
 %         'load_obs_period' , 20 );   % only needed for loaded models

@@ -142,6 +142,118 @@ classdef Data
             end
         end
         
+        % animate_timeseries
+        function animate_timeseries( t , data , time_window , x_label , y_label , name , subplots )
+            %animate_timeseries: Create moving window animation of timeseries
+            %   data.
+            %   t - vector of time-steps
+            %   data - matrix containing data. Each row is one time-step
+            %   time_window - width of the plot in time
+            %   x_label - x axis label
+            %   y_label - y axis label
+            %   name - file name for animation file (optional)
+            %   subplots - true/false, chooses wheter to plot data on one plot or several subplots
+            
+            if ~exist( 'name' , 'var')
+                name = 'unnamed_data_animation';
+            end
+            if ~exist( 'subplots' , 'var')
+                subplots = false;
+            end
+            
+            % size variables
+            font_size = 20;
+            line_width = 3;
+            axis_label_size = 14;
+            
+%             fig = figure;   % create figure for the animation
+            fig = figure('units','pixels','position',[0 0 720 480]);   % create figure for the animation (ensures high resolution)
+%             daspect([1 1 1]);   % make axis ratio 1:1
+
+            % colormap
+            colormap lines;
+            cmap = colormap;
+            cmap(1,:) = [27,158,119]/255;   % custom color, green
+            cmap(2,:) = [217,95,2]/255;   % custom color, orange
+            cmap(3,:) = [117,112,179]/255;   % custom color, purple
+
+            % Prepare the new file.
+            vidObj = VideoWriter( ['animations' , filesep , name , '.mp4'] , 'MPEG-4' );
+            vidObj.FrameRate = 30;
+            open(vidObj);
+            
+            set(gca,'nextplot','replacechildren', 'FontUnits' , 'normalized');
+            
+            totTime = t(end);    % total time for animation (s)
+            nsteps = length(t); % total steps in the simulation
+            totFrames = 30 * totTime;   % total frames in 30 fps video
+            time_window_steps = 30 * time_window;   % length of time window in index steps
+            
+            % run animation fram by frame
+            for i = 1:totFrames
+                
+                % current time index
+                index = floor( (i-1) * (nsteps / totFrames) ) + 1;   % skips points between frames
+                index_min = index - time_window_steps;
+                
+                % current time window
+                x_min = t(index) - time_window;
+                x_max = t(index);
+                
+                hold on;
+                if subplots
+                    num_plots = size( data , 2 );
+                    for j = 1 : num_plots
+                        subplot( num_plots , 1 , j );
+                        if index_min <= 0
+                            p1 = plot( t(1:index) , data( 1:index , j ) , 'LineWidth' , line_width );
+                        else
+                            p1 = plot( t(index_min:index) , data( index_min:index , j ) , 'LineWidth' , line_width );
+                        end
+                        set(p1, {'color'}, num2cell( cmap(3,:) , 2 ));  % same color for all lines
+                        grid on;
+%                         ylim( [ floor( min( data(:) ) ) , ceil( max( data(:) ) ) ] );
+                        ylim( [ floor( min( data(:) ) ) , 1.5 ] );
+                        xlim( [ x_min , x_max ] );
+                        xticks( ceil(x_min/2)*2 :2: floor(x_max/2)*2 );   % ticks on whole number seconds
+                        ax = gca;
+                        ax.FontSize = axis_label_size;
+                        xlabel(x_label , 'Interpreter' , 'Latex' , 'FontSize' , font_size);
+                        if num_plots == 1
+                            ylabel(y_label , 'Interpreter' , 'Latex' , 'FontSize' , font_size);
+                        else
+                            ylabel([ y_label , '$_' , num2str(j) , '$' ] , 'Interpreter' , 'Latex' , 'FontSize' , font_size);
+                        end
+                    end
+                else
+                    if index_min <= 0
+                        p1 = plot( t(1:index) , data( 1:index , : ) , 'LineWidth' , line_width );
+                    else
+                        p1 = plot( t(index_min:index) , data( index_min:index , : ) , 'LineWidth' , line_width );
+                    end
+                    set(p1, {'color'}, num2cell( cmap(1:size(data,2),:) , 2 ));
+                    grid on;
+                    ylim( [ floor( min( data(:) ) ) , ceil( max( data(:) ) ) ] );
+                    xlim( [ x_min , x_max ] );
+                    xticks( ceil(x_min) : floor(x_max) );   % ticks on whole number seconds
+%                     ax = gca;     % these two lines causes glitch for some reason
+%                     ax.FontSize = axis_label_size;
+                    xlabel(x_label , 'Interpreter' , 'Latex' , 'FontSize' , font_size);
+                    ylabel(y_label , 'Interpreter' , 'Latex' , 'FontSize' , font_size);
+                end
+                hold off;
+                 
+                
+                % write each frame to the file
+                currFrame = getframe(fig);
+                writeVideo(vidObj,currFrame);
+                
+                delete(p1);
+            end
+            
+            close(vidObj);
+        end
+            
     end
 end
 

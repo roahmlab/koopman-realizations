@@ -570,7 +570,7 @@ classdef Arm
         end
         
         % animate_arm_refvmpc
-        function animate_arm_refvmpc( obj, t , xref , xmpc , varargin)
+        function animate_arm_refvmpc( obj, t , xref , xmpc , varargin )
             %animate_arm: Animate a simualtion of the arm
             %   t - time vector from simulation
             %   xref - state reference vector (alpha and alphadot)
@@ -653,7 +653,7 @@ classdef Arm
         end
         
         % animate_arm_refendeff
-        function animate_arm_refendeff( obj, t , ref , y , w , name )
+        function animate_arm_refendeff( obj, t , ref , y , w , name , color_index )
             %animate_arm_refendeff: Animate a simualtion of the arm
             % and show the desired end effector trajectory
             %   t - time vector from simulation
@@ -667,13 +667,20 @@ classdef Arm
             elseif size( w , 1 ) == 1
                 w = kron( ones( size(t) ) , w );   % constant load   
             end
-            if ~exist( 'name' , 'var')
+            if ~exist( 'name' , 'var') || isempty(name)
                 name = obj.params.sysName;
             end
+            if ~exist( 'color_index' , 'var') || isempty(color_index)
+                color_index = 1;    % use first color in the colormap
+            end
+            
             
             % colormap
             colormap lines;
             cmap = colormap;
+            cmap(1,:) = [27,158,119]/255;   % custom color, green
+            cmap(2,:) = [217,95,2]/255;   % custom color, orange
+            cmap(3,:) = [117,112,179]/255;   % custom color, purple
             linewidth = 5;  % width of the lines
             pathwidth = 2;  % width of end effector path line
             
@@ -740,7 +747,7 @@ classdef Arm
                 p1 = plot(x, y, 'k-o' , 'LineWidth' , linewidth);
 %                 p2 = plot( marker(:,1) , marker(:,2) , 'r*');
                 p4 = plot( marker(end,1) , marker(end,2) , 'bo' , 'MarkerSize' , 20*w(index,1) + 0.01 , 'MarkerFaceColor' , 'b' );  % end effector load
-                p5 = plot( endeff_path(1:i,1) , endeff_path(1:i,2) , 'Color' , cmap(4,:) , 'LineWidth' , pathwidth);     % end effector path
+                p5 = plot( endeff_path(1:i,1) , endeff_path(1:i,2) , 'Color' , cmap(color_index,:) , 'LineWidth' , pathwidth);     % end effector path
                 hold off;
                 grid on;
                 
@@ -760,6 +767,98 @@ classdef Arm
             close(vidObj);
         end
         
+        % animate_arm_validation
+        function animate_arm_validation( obj, t , x_real , y_model , w , name )
+            %animate_arm_validation: Animate a simualtion of the arm
+            %   t - time vector from simulation
+            %   x_real - state vector from simulation (alpha and alphadot)
+            %   y_model - output of identified model (could be joint angles, marker positions, or other)
+            %   w - load, leave empty if system is unloaded
+            %   name - name of the video file (default: sysName)
+
+            % deal with optional arguments w and name
+            if isempty(w)
+                w = kron( ones( size(t) ) , [0,0] );   % default is no load
+            elseif size( w , 1 ) == 1
+                w = kron( ones( size(t) ) , w );   % constant load   
+            end
+            if ~exist( 'name' , 'var')
+                name = obj.params.sysName;
+            end
+            
+            alpha = x_real(: , 1:obj.params.Nlinks );   % joint angles over time
+            
+%             fig = figure;   % create figure for the animation
+            fig = figure('units','pixels','position',[0 0 720 720]);   % create figure for the animation (ensures high resolution)
+            axis([-1.1*obj.params.L, 1.1*obj.params.L, -1.1*obj.params.L, 1.1*obj.params.L])
+            set(gca,'Ydir','reverse')
+            xlabel('$\hat{\alpha}$ (m)' , 'Interpreter' , 'Latex' , 'FontSize' , 26);
+            ylabel('$\hat{\beta}$ (m)' , 'Interpreter' , 'Latex' , 'FontSize' , 26);
+            daspect([1 1 1]);   % make axis ratio 1:1
+           
+            % Prepare the new file.
+            vidObj = VideoWriter( ['animations' , filesep , name , '.mp4'] , 'MPEG-4' );
+            vidObj.FrameRate = 30;
+            open(vidObj);
+            
+            set(gca,'nextplot','replacechildren', 'FontUnits' , 'normalized');
+            
+            totTime = t(end);    % total time for animation (s)
+            nsteps = length(t); % total steps in the simulation
+            totFrames = 30 * totTime;   % total frames in 30 fps video
+            
+            % Grid points for gravity direction arrows
+            arrow_len = 0.1;
+            [ x_grid , y_grid ] = meshgrid( -1.25*obj.params.L:arrow_len:1.25*obj.params.L , -1.25*obj.params.L:arrow_len:1.25*obj.params.L);
+            
+            % run animation fram by frame
+            for i = 1:totFrames
+                
+                index = floor( (i-1) * (nsteps / totFrames) ) + 1;   % skips points between frames
+                
+                % direction of gravity
+                u_grid = -ones( size(x_grid) ) * arrow_len * sin(w(index,2));
+                v_grid = ones( size(y_grid) ) * arrow_len * cos(w(index,2));
+                
+                % locations of joints
+                [ X , ~ ] = obj.alpha2x( alpha(index,:)' );
+                x_joints_real = X(:,1);
+                y_joints_real = X(:,2);
+                marker = obj.get_markers( alpha(index,:) );   % get mocap sensor location
+                
+                % location of joints of identified model
+                switch obj.output_type
+                    case 'angles'
+                        [ X_model , ~ ] = obj.alpha2x( y_model(index,:)' );
+                        x_joints_model = X_model(:,1);
+                        y_joints_model = X_model(:,2);
+                    case 'markers'
+                        x_joints_model = [ 0 , y_model(index,1:2:end) ];
+                        y_joints_model = [ 0 , y_model(index,2:2:end) ];
+                    otherwise
+                        error('This function is only capable of plotting systems with output_type angles or markers.');
+                end
+                
+                hold on;
+                p0 = quiver( x_grid , y_grid , u_grid , v_grid , 'Color' , [0.75 0.75 0.75] );
+                p1 = plot(x_joints_real, y_joints_real, '-o' , 'LineWidth' , 3 , 'Color' , [ 0.75 0.75 0.75 ]);  % ghost of actual arm trajectory
+                p2 = plot( x_joints_model , y_joints_model , '-o' , 'LineWidth' , 3 , 'Color' , [ 0 0 0 ]);    % arm trajecty provided by model
+                p4 = plot( marker(end,1) , marker(end,2) , 'bo' , 'MarkerSize' , 2*w(index,1) + 0.01 , 'MarkerFaceColor' , 'b' );  % end effector load
+                hold off;
+                grid on;
+                
+                % write each frame to the file
+                currFrame = getframe(fig);
+                writeVideo(vidObj,currFrame);
+                
+                delete(p0);
+                delete(p1);
+                delete(p2); 
+                delete(p4);
+            end
+            
+            close(vidObj);
+        end
             
         %% simulation
         

@@ -63,6 +63,8 @@ classdef Rsys
 %                 selectors = ones( obj.num_terms , obj.degree_x + obj.degree_u + 2 + 4 );    % use all terms
                 selectors = randi( [0,1] , obj.num_terms , obj.degree_x + obj.degree_u );   % **** new way
                 
+%                 selectors(:,end-obj.degree_u+1:end) = 1; % hack to guarantee control affine input (not just linear input)
+                
                 % define terms
                 terms = sym( ones(1,obj.num_terms) );
                 for j = 1 : obj.num_terms

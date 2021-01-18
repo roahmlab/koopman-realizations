@@ -17,9 +17,9 @@ Ksysid = Ksysid( data4sysid ,...
         'model_type' , 'bilinear' ,...    % model type (linear, bilinear, or nonlinear)
         'time_type' , 'discrete' , ...  % 'discrete' or 'continuous'
         'obs_type' , { 'poly' } ,...    % type of basis functions
-        'obs_degree' , [ 6 ] ,...       % "degree" of basis functions
+        'obs_degree' , [ 1 ] ,...       % "degree" of basis functions
         'snapshots' , Inf ,...          % Number of snapshot pairs
-        'lasso' , [ 2 ] ,...            % L1 regularization term (Inf for least-squares sol.)
+        'lasso' , [ Inf ] ,...            % L1 regularization term (Inf for least-squares sol.)
         'delays' , 0 ,...               % Numer of state/input delays
         'loaded' , false ,...           % Does system include external loads?
         'dim_red' , false);             % Should dimensional reduction be performed?

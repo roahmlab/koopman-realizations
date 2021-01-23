@@ -793,7 +793,7 @@ classdef Ksysid
             maxDegree = degree;
             
             % create basis functions with random centers in interval [-1 , 1]
-            psi = sym('gaussianBasis', [maxDegree , 1]);
+            gaussianBasis = sym('gaussianBasis', [maxDegree , 1]);
             zeta0 = (2*rand([nzeta,maxDegree]) - 1); % columns are random centers
             for i = 1 : maxDegree
                 radius = norm( zeta - zeta0(:,i) );

@@ -210,10 +210,10 @@ classdef Data
                         else
                             p1 = plot( t(index_min:index) , data( index_min:index , j ) , 'LineWidth' , line_width );
                         end
-                        set(p1, {'color'}, num2cell( cmap(3,:) , 2 ));  % same color for all lines
+                        set(p1, {'color'}, num2cell( cmap(1,:) , 2 ));  % same color for all lines
                         grid on;
-%                         ylim( [ floor( min( data(:) ) ) , ceil( max( data(:) ) ) ] );
-                        ylim( [ floor( min( data(:) ) ) , 1.5 ] );
+                        ylim( [ floor( min( data(:) ) ) , ceil( max( data(:) ) ) ] );
+%                         ylim( [ floor( min( data(:) ) ) , 1.5 ] );
                         xlim( [ x_min , x_max ] );
                         xticks( ceil(x_min/2)*2 :2: floor(x_max/2)*2 );   % ticks on whole number seconds
                         ax = gca;
@@ -242,8 +242,7 @@ classdef Data
                     ylabel(y_label , 'Interpreter' , 'Latex' , 'FontSize' , font_size);
                 end
                 hold off;
-                 
-                
+                              
                 % write each frame to the file
                 currFrame = getframe(fig);
                 writeVideo(vidObj,currFrame);

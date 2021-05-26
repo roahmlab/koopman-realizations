@@ -160,11 +160,8 @@ arguments into Kmpc each time it is called.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% Known Issues %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Issue #1 (2021-05-26): u is actually joint reference angle not joint torques
-    Input 'u' into Arm system is not joint torques, as described in the
-accompanying paper. It is actually joint reference angles with the joint 
-torques defined as follows: joint_torques = ku * ( u - alpha ),
-where ku is a stiffness constant and alpha is the actual joint angles.
+ (2021-05-26)
+Input 'u' into Arm system is 
 
 
 

@@ -195,7 +195,13 @@ classdef Ksysid
             
             % calculate scaling factors
             scale_y = ( y_max - y_min ) ./ 2;
+            for i = find( scale_y == 0 )    % avoids Inf issue for constant states
+                scale_y(i) = 1;
+            end
             scale_u = ( u_max - u_min ) ./ 2;
+            for i = find( scale_u == 0 )    % avoids Inf issue for constant input trials
+                scale_u(i) = 1;
+            end
             
             % shift and scale the data
             data_scaled = struct;    % initialize
